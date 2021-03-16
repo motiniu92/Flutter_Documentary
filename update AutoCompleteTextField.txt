@@ -1,0 +1,854 @@
+import 'dart:convert';
+
+import 'package:autocomplete_textfield/autocomplete_textfield.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+import 'package:new_motel/appTheme.dart';
+import 'package:new_motel/loaderPage.dart';
+import 'package:new_motel/model/countryListModel.dart';
+import 'package:new_motel/service/apiService.dart';
+import 'package:new_motel/utils/constants.dart';
+
+class SignUpSreen extends StatefulWidget {
+  @override
+  _SignUpSreenState createState() => _SignUpSreenState();
+}
+
+class _SignUpSreenState extends State<SignUpSreen> {
+  final firstNameSignUpController = TextEditingController();
+  final lastNameSignUpController = TextEditingController();
+
+  final emailSignUpController = TextEditingController();
+
+  final phoneSignUpController = TextEditingController();
+
+  final passSignUpController = TextEditingController();
+  final confirmPassSignUpController = TextEditingController();
+
+  final key = GlobalKey<FormState>();
+  bool _cshowPassword = false;
+  bool _cshowPassword1 = false;
+  bool isLoading = false;
+  bool _autoValidate = false;
+  AutoCompleteTextField searchTextField;
+  GlobalKey<AutoCompleteTextFieldState<ResponseSearch>> keyss = new GlobalKey();
+
+  SignupSearch searchSignUp;
+  List<ResponseSearch> datlist;
+  // String email, password, phone, firstName, lastName;
+
+  handleSignUp() async {
+    final form = key.currentState;
+    if (form.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+      form.save();
+      register();
+    } else {
+      setState(() {
+        _autoValidate = true;
+        isLoading = false;
+      });
+    }
+  }
+
+  /// Hanle Register
+
+  register() async {
+    final body = {
+      "first_name": firstNameSignUpController.text.trim(),
+      "last_name": lastNameSignUpController.text.trim(),
+      "email": emailSignUpController.text.trim(),
+      "password": passSignUpController.text.trim(),
+      "confirm_password": confirmPassSignUpController.text.trim(),
+      "phone": phoneSignUpController.text.trim(),
+    };
+
+    var response = await http.post(
+      ApiService.register,
+      body: body,
+
+      // headers: {HttpHeaders.contentTypeHeader: "application/json"},
+    );
+    final jsonString = jsonEncode(body);
+    var errorMsg = json.decode(response.body)['msg'];
+    print(jsonString);
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body)['status'];
+
+      print(data);
+
+      if (data == 1) {
+        setState(() {
+          isLoading = true;
+        });
+        Fluttertoast.showToast(
+            msg: "Account Create Successfully",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.indigo,
+            textColor: Colors.white,
+            fontSize: 16.0);
+
+        Navigator.pop(context);
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        Fluttertoast.showToast(
+            msg: errorMsg,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.indigo,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      }
+    } else {}
+  }
+
+  // Country List Get Json Data
+  // List<ResponseSearch> country_list_response;
+
+
+ Future<String> fetchHotelData() async {
+    final response = await http
+        .get('https://deshitour.com/api/hotels/countries?appKey=DeshiTour');
+    try {
+      setState(() {
+        if (response.statusCode == 200) {
+          searchSignUp = SignupSearch.fromJson(jsonDecode(response.body));
+          print("Response ${response.body}");
+          datlist = searchSignUp.response;
+          return 'response';
+        }
+      });
+    } catch (e) {}
+
+  }
+
+  // Widget row(CountryListResponse country_list) {
+  //   print("Country List Name <<<<<  ${country_list.name}");
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //     children: <Widget>[
+  //       Text(
+  //         country_list.name,
+  //         style: TextStyle(fontSize: 16.0),
+  //       ),
+  //       SizedBox(
+  //         width: 10.0,
+  //       ),
+  //       Text(
+  //         country_list.code,
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  @override
+  void initState() {
+    super.initState();
+    handleSignUp();
+    fetchHotelData();
+
+    firstNameSignUpController.clear();
+    lastNameSignUpController.clear();
+    emailSignUpController.clear();
+    phoneSignUpController.clear();
+    passSignUpController.clear();
+    confirmPassSignUpController.clear();
+
+  }
+
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   firstNameSignUpController.clear();
+  //   lastNameSignUpController.clear();
+  //   emailSignUpController.clear();
+  //   phoneSignUpController.clear();
+  //   passSignUpController.clear();
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return isLoading
+        ? Center(child: LoaderPage())
+        : SafeArea(
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              appBar: AppBar(
+                elevation: 1,
+                iconTheme: IconThemeData(color: Colors.black),
+                backgroundColor: Colors.white,
+                title: RichText(
+                  text: TextSpan(
+                      text: DESHI,
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontFamily: 'Impact',
+                        color: HexColor("#26408A"),
+                      ),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: TOUR,
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontFamily: 'Impact',
+                            color: HexColor("#118ACB"),
+                          ),
+                        ),
+                      ]),
+                ),
+                leading: IconButton(
+                    icon: Icon(Icons.arrow_back),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => LoginWidget(
+                      //               totalGuest: null,
+                      //               adults: null,
+                      //               child: null,
+                      //               tour: null,
+                      //               hotelDetails: null,
+                      //               type: 'login',
+                      //               rr: [],
+                      //             )));
+                    }),
+              ),
+              body: InkWell(
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                onTap: () {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                child: Center(
+                  child: Container(
+                    child: Form(
+                  autovalidate: _autoValidate,
+                      key: key,
+                      child: SingleChildScrollView(
+                        physics: BouncingScrollPhysics(),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            SizedBox(
+                              height: 50,
+                            ),
+
+
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                // NID TextFields
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: TextFormField(
+                                        controller: firstNameSignUpController,
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "Please enter first name";
+                                          }
+                                          return null;
+                                        },
+                                        maxLines: 1,
+                                        onChanged: (String txt) {},
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                        cursorColor:
+                                            AppTheme.getTheme().primaryColor,
+                                        decoration: new InputDecoration(
+                                          errorText: null,
+                                          border: InputBorder.none,
+                                          hintText: "First Name",
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintStyle: TextStyle(
+                                              color: AppTheme.getTheme()
+                                                  .disabledColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+
+                            // Passport TextFields
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: TextFormField(
+                                        controller: lastNameSignUpController,
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "Please enter last name";
+                                          }
+                                          return null;
+                                        },
+                                        maxLines: 1,
+                                        onChanged: (String txt) {},
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                        cursorColor:
+                                            AppTheme.getTheme().primaryColor,
+                                        decoration: new InputDecoration(
+                                          errorText: null,
+                                          border: InputBorder.none,
+                                          hintText: "Last Name",
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintStyle: TextStyle(
+                                              color: AppTheme.getTheme()
+                                                  .disabledColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(
+                              height: 16,
+                            ),
+
+                            // Driving License TextFields
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: TextFormField(
+                                        controller: phoneSignUpController,
+                                        keyboardType: TextInputType.phone,
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "Please enter phone number";
+                                          }
+                                          return null;
+                                        },
+                                        maxLines: 1,
+                                        onChanged: (String txt) {},
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                        cursorColor:
+                                            AppTheme.getTheme().primaryColor,
+                                        decoration: new InputDecoration(
+                                          errorText: null,
+                                          border: InputBorder.none,
+                                          hintText: "Phone",
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintStyle: TextStyle(
+                                              color: AppTheme.getTheme()
+                                                  .disabledColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: TextFormField(
+                                        controller: emailSignUpController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "Please enter email address";
+                                          }
+                                          return null;
+                                        },
+                                        maxLines: 1,
+                                        onChanged: (String txt) {},
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                        cursorColor:
+                                            AppTheme.getTheme().primaryColor,
+                                        decoration: new InputDecoration(
+                                          errorText: null,
+                                          border: InputBorder.none,
+                                          hintText: "Email",
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintStyle: TextStyle(
+                                              color: AppTheme.getTheme()
+                                                  .disabledColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Padding(
+                              padding:
+                              const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Column(
+                                    children: [
+                                      // ignore: missing_required_param
+                                      searchTextField =      AutoCompleteTextField<ResponseSearch>(
+
+                                        key: keyss,
+                                        clearOnSubmit: false,
+                                        //    controller: searchTextField.textField.controller,
+                                        suggestions: searchSignUp.response?? "",
+                                        style: TextStyle(color: Colors.black, fontSize: 16.0),
+                                        decoration: InputDecoration(
+
+                                            errorText: null,
+                                            border: InputBorder.none,
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintText: SEARCH_COUNTRY_NAME,
+                                            hintStyle: TextStyle(
+
+                                                color: AppTheme.getTheme()
+                                                    .disabledColor)
+                                        ),
+
+
+                                        itemFilter: (item, query) {
+                                          return item.name.toLowerCase()
+
+                                              .startsWith(query.toLowerCase());
+                                        },
+
+
+                                        itemSorter: (a, b) {
+
+                                          return a.name.compareTo(b.name);
+
+                                        },
+
+                                        itemSubmitted: (item) {
+                                          setState(() {
+                                            searchTextField.textField.controller.text = item.name;
+                                          });
+                                        },
+
+
+                                        itemBuilder: (context, item) {
+                                          return ListTile(title: Text(item.name),);
+                                        },
+                                      )
+                                    ],
+
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Padding(
+                              padding:
+                              const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: TextFormField(
+                                        controller: passSignUpController,
+                                        obscureText: !_cshowPassword,
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "Please enter your password";
+                                          }
+                                          return null;
+                                        },
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                        cursorColor:
+                                            AppTheme.getTheme().primaryColor,
+                                        decoration: new InputDecoration(
+                                          errorText: null,
+                                          border: InputBorder.none,
+                                          suffixIcon: GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _cshowPassword =
+                                                    !_cshowPassword;
+                                              });
+                                            },
+                                            child: Icon(_cshowPassword
+                                                ? Icons.visibility
+                                                : Icons.visibility_off),
+                                          ),
+                                          hintText: "Password",
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintStyle: TextStyle(
+                                              color: AppTheme.getTheme()
+                                                  .disabledColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, right: 16),
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: TextFormField(
+                                        controller: confirmPassSignUpController,
+                                        obscureText: !_cshowPassword1,
+                                        validator: (value) {
+                                          if (value.isEmpty) {
+                                            return "Please enter your password";
+                                          }
+                                          return null;
+                                        },
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                        ),
+                                        cursorColor:
+                                            AppTheme.getTheme().primaryColor,
+                                        decoration: new InputDecoration(
+                                          errorText: null,
+                                          border: InputBorder.none,
+                                          suffixIcon: GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _cshowPassword1 =
+                                                    !_cshowPassword1;
+                                              });
+                                            },
+                                            child: Icon(_cshowPassword1
+                                                ? Icons.visibility
+                                                : Icons.visibility_off),
+                                          ),
+                                          hintText: " Confirm Password",
+                                          contentPadding: EdgeInsets.only(
+                                              top: 20, bottom: 10),
+                                          hintStyle: TextStyle(
+                                              color: AppTheme.getTheme()
+                                                  .disabledColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+
+                            //   =========== Country List Show and Getting ================
+
+
+                            // Padding(
+                            //   padding:
+                            //   const EdgeInsets.only(left: 24, right: 24),
+                            //   child: Container(
+                            //     decoration: BoxDecoration(
+                            //       color: AppTheme.getTheme().backgroundColor,
+                            //       borderRadius:
+                            //       BorderRadius.all(Radius.circular(38)),
+                            //       // border: Border.all(
+                            //       //   color: HexColor("#757575").withOpacity(0.6),
+                            //       // ),
+                            //       boxShadow: <BoxShadow>[
+                            //         BoxShadow(
+                            //           color: AppTheme.getTheme().dividerColor,
+                            //           blurRadius: 8,
+                            //           offset: Offset(4, 4),
+                            //         ),
+                            //       ],
+                            //     ),
+                            //
+                            //       child: Container(
+                            //         height: 48,
+                            //         child: Center(
+                            //           child: new DropdownButton(
+                            //             isDense: false,
+                            //             underline:Container(),
+                            //
+                            //             items: countryListRespnse.map((item) {
+                            //               return new DropdownMenuItem(
+                            //                 child: new Text(item.name),
+                            //                 value: item.name.toString(),
+                            //               );
+                            //             }).toList(),
+                            //             onChanged: (val) {
+                            //               setState(() {
+                            //                 selectCountry = val;
+                            //               });
+                            //             },
+                            //             value: selectCountry,
+                            //           ),
+                            //         ),
+                            //       ),
+                            //
+                            //   ),
+                            // ),
+
+
+
+
+                            // =============== Country List Gettings
+
+
+                            // ============= Ending Country List ===============
+
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 24, right: 24, bottom: 8, top: 16),
+                              child: Container(
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().primaryColor,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(24.0)),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(24.0)),
+                                    highlightColor: Colors.transparent,
+                                    onTap: () {
+                                      handleSignUp();
+                                    },
+                                    child: Center(
+                                      child: Text(
+                                        "Sign Up",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16,
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 10,
+                            ),
+
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Already Have an Account?  ",
+                                  style: TextStyle(fontSize: 17),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    // Navigator.push(
+                                    //     context,
+                                    //     MaterialPageRoute(
+                                    //         builder: (context) =>
+                                    //             LoginWidget()));
+                                  },
+                                  child: Container(
+                                    child: Text(
+                                      "SignIn",
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.indigo[800]),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+  }
+}
