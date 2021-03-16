@@ -1,0 +1,34 @@
+ 
+ Could not resolve all files for configuration ':app:debugRuntimeClasspath'.
+ 
+ 
+ 
+ Execution failed for task ':flutter:javaPreCompileDebug'.
+> Could not resolve all files for configuration ':flutter:debugCompileClasspath'.
+   > Could not find io.flutter:flutter_embedding_debug:1.0.0-5b952f286fc070e99cf192775fa5c9dfe858b692.
+     Required by:
+         project :flutter
+   > Could not find io.flutter:arm64_v8a_debug:1.0.0-5b952f286fc070e99cf192775fa5c9dfe858b692.
+     Required by:
+         project :flutter
+   > Could not find io.flutter:x86_debug:1.0.0-5b952f286fc070e99cf192775fa5c9dfe858b692.
+     Required by:
+         project :flutter
+   > Could not find io.flutter:x86_64_debug:1.0.0-5b952f286fc070e99cf192775fa5c9dfe858b692.
+     Required by:
+         project :flutter
+		 
+		 
+======================================================
+	Solutions:
+	
+	Links: https://github.com/flutter/flutter/issues/41553
+	
+	Ans:
+	flutter doctor -v
+	flutter channel stable && flutter upgrade
+	flutter clean
+	flutter run
+	
+	
+ 
