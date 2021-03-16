@@ -1,0 +1,45 @@
+  Padding(
+                              padding:
+                              const EdgeInsets.only(left: 24, right: 24),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.getTheme().backgroundColor,
+                                  borderRadius:
+                                  BorderRadius.all(Radius.circular(38)),
+                                  // border: Border.all(
+                                  //   color: HexColor("#757575").withOpacity(0.6),
+                                  // ),
+                                  boxShadow: <BoxShadow>[
+                                    BoxShadow(
+                                      color: AppTheme.getTheme().dividerColor,
+                                      blurRadius: 8,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                ),
+
+                                  child: Container(
+                                    height: 48,
+                                    child: Center(
+                                      child: new DropdownButton(
+                                        isDense: false,
+                                        underline:Container(),
+
+                                        items: countryListRespnse.map((item) {
+                                          return new DropdownMenuItem(
+                                            child: new Text(item.name),
+                                            value: item.name.toString(),
+                                          );
+                                        }).toList(),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            selectCountry = val;
+                                          });
+                                        },
+                                        value: selectCountry,
+                                      ),
+                                    ),
+                                  ),
+
+                              ),
+                            ),
